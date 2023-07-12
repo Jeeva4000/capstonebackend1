@@ -1,0 +1,311 @@
+Routers
+
+notes.js
+
+
+import express from "express";
+import { Notes } from "../Models/notes.js";
+
+const router = express.Router();
+
+router.get("/all", async (req, res) => {
+    try {
+        const notes = await Notes.find().populate("cars")
+        if (!notes) {
+            return res.status(400).json({ message: "Couldn't found any Info" })
+        }
+        res.status(200).json({
+            message: "Sucessfully got your data",
+            data: notes
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" })
+    }
+})
+
+router.get("/cars", async (req, res) => {
+    try {
+        const notes = await Notes
+            .find({ user: req.user._id })
+            .populate("cars")
+        if (!notes) {
+            return res.status(400).json({ message: "Couldn't any cars" })
+        }
+        res.status(200).json({ message: "Sucessfully got your data", data: notes })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" })
+    }
+})
+
+router.post("/add", async (req, res) => {
+    // new date logic
+    try {
+        // const postedDate = new Date().toJSON().slice(0, 10);
+        const notes = await new Notes(
+            {
+                ...req.body,
+                // date: postedDate,
+                user: req.user._id
+            }
+        ).save()
+        if (!notes) {
+            return res.status(400).json({ message: "Error in saving the notes" })
+        }
+        res.status(200).json({ message: "Notes saved Successfully", data: notes })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" })
+    }
+})
+
+router.put("/edit/:id", async (req, res) => {
+    try {
+        const updatedNotes = await Notes.findOneAndUpdate(
+            { _id: req.params.id },
+            { $set: req.body },
+            { new: true }
+        );
+        if (!updatedNotes) {
+            return res
+                .status(400)
+                .json({ message: "Error Occured" })
+        }
+        res.status(200).json({ message: "Sucessfully updated", data: updatedNotes })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" })
+    }
+})
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const deletedNotes = await Notes.findByIdAndDelete({
+            _id: req.params.id
+        })
+        if (!deletedNotes) {
+            return res
+                .status(400)
+                .json({ message: "Error Occured" })
+        }
+        res.status(200).json({ message: "Sucessfully Deleted" })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal server error" })
+    }
+})
+
+export const notesRouter = router
+
+
+user.js
+
+import express from "express";
+import { User, generateJWTtoken } from "../Models/user.js";
+import bcrypt from "bcrypt";
+
+const router = express.Router();
+
+router.post("/signup", async (req, res) => {
+  try {
+    // Find out if user is already registered
+    let user = await User.findOne({ email: req.body.email });
+    if (user) return res.status(400).json({ message: "Email already exists" });
+
+    // Generate hashed password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    // Create and save new user
+    user = await new User({
+      name: req.body.name,
+      contact: req.body.contact,
+      email: req.body.email,
+      password: hashedPassword,
+    }).save();
+
+    const token = generateJWTtoken(user._id);
+    res.status(201).json({ message: "Successfully logged in", token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.post("/login", async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Validate password
+    const validatePassword = await bcrypt.compare(
+      req.body.password,
+      user.password
+    );
+
+    if (!validatePassword) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const token = generateJWTtoken(user._id);
+    res.status(200).json({ message: "Logged in successfully", token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+export const useRouter = router;
+
+
+Models
+
+notes.js
+
+import mongoose from "mongoose";
+import { ObjectId } from "mongodb";
+
+const notesSchema = new mongoose.Schema(
+{
+   image :{
+    type : String,
+    required : true
+   },
+   make :{
+    type : String,
+    required : true
+   },
+   model :{
+    type : String,
+    required : true
+   },
+   price :{
+    type : Number,
+    required : true
+   },
+   color :{
+    type : String,
+    required : true
+   },
+   fuelType :{
+    type : String,
+    required : true
+   },
+   
+   user :{
+    type:ObjectId,
+    ref:"user"
+   }
+
+}
+)
+
+
+const Notes = mongoose.model("notes",notesSchema)
+export{Notes}
+
+user.js
+
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+
+
+const userSchema = new mongoose.Schema(
+    {
+        name:{
+            type:String,
+            required:true,
+            maxlength:32,
+            trim:true
+        },
+        email:{
+            type:String,
+            required:true,
+            unique:true,
+            trim:true
+        },
+        contact:{
+            type:Number,
+        },
+        password:{
+            type:String,
+            require:true
+        }
+    }
+)
+
+
+const generateJWTtoken =(id)=>{
+    return jwt.sign({id},process.env.SECERET_KEY)
+}
+
+const User = mongoose.model("user",userSchema)
+export{User,generateJWTtoken}
+
+import {MongoClient} from "mongodb"
+// import Obj from "mongodb"
+
+const MongoURL = "mongodb://127.0.0.1:27017"
+async function createConnection(){
+   const client = new MongoClient(MongoURL);
+    await client.connect()
+    console.log("MongoDB is connected Sucessfully")
+    return client
+}
+
+// export var ObjectId = Obj.ObjectId;
+export const client = await createConnection();
+
+
+// mongodb+srv://Jeeva:Jeeva12345@cluster0.7wb6jvt.mongodb.net/b45
+
+
+// import express from "express"
+// import dotenv from "dotenv"
+// import { studentsRouter } from "./Routers/students.js";
+// import {useRouter} from "../Controllers/users.js";
+// import { isAuthenticated } from "./Authentication/auth.js";
+// import { isAuthenticated } from "./Authentication/auth.js";
+// import cors from "cors"
+
+// //confgure the environment
+// dotenv.config();
+// const PORT = process.env.PORT
+
+// //initiating server
+// const app = express();
+
+// //middleware
+// app.use(express.json());
+// app.use(cors());
+// // app.use(cors());
+
+// //studers routers
+// // app.use("/students",studentsRouter)
+// app.use("/students",isAuthenticated,studentsRouter)
+// app.use("/users",useRouter)
+
+// //starting ther server
+// app.listen(PORT, ()=>console.log("server running in localhost:9091")) 
+
+router.post("/signup", async (req,res)=>{
+    try {
+        const salt = await bcrypt.genSalt(10)
+        const user = await getUser(req.body.email)
+        if(!user){
+            const hashedPassword = await bcrypt.hash(req.body.password,salt);
+            return res.status(200).json({data:{
+                password : req.body.password,
+                hashedPassword : hashedPassword,
+                salt:salt
+            }})
+        }
+        res.status(400).json({data:"Given email is already exist"})
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({data:"Internal server Error"})
+    }
+})

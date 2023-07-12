@@ -1,0 +1,368 @@
+index.js
+
+
+// import express from "express";
+// import { createConnection } from "./db.js";
+// import { CarsRouters } from "./Controllers/Cars.js";
+
+// const PORT = 9006;
+
+// createConnection();
+
+// const app = express();
+
+// app.use(express.json());
+
+// app.use("/all", CarsRouters);
+
+// app.listen(PORT, () =>
+//   console.log(`Server running on localhost:${PORT}`)
+// );
+
+
+import express from "express";
+import { getAllCars, getCarById, addCar, updateCar, deleteCar } from "./carController.js";
+
+const app = express();
+const PORT = 9006;
+
+app.use(express.json());
+
+// Get all cars
+app.get("/cars", async (req, res) => {
+  try {
+    const cars = await getAllCars(req);
+    if (cars.length <= 0) {
+      res.status(400).json({ error: "Cars Not found" });
+      return;
+    }
+    res.status(200).json({ data: cars});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// Get car by ID
+app.get("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const car = await getCarById(carId);
+    if (!car) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json(car);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Add a new car
+app.post("/add/cars", async (req, res) => {
+  try {
+    const carData = req.body;
+    const newCarId = await addCar(carData);
+    res.json({ id: newCarId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update a car by ID
+app.put("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const carData = req.body;
+    const modifiedCount = await updateCar(carId, carData);
+    if (modifiedCount === 0) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json({ message: "Car updated successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Delete a car by ID
+app.delete("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const deletedCount = await deleteCar(carId);
+    if (deletedCount === 0) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json({ message: "Car deleted successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on localhost:${PORT}`);
+});
+
+db.js
+
+// import {MongoClient} from "mongodb"
+
+
+// const MongoURL = "mongodb://127.0.0.1:27017"
+// export async function createConnection(){
+//    const client = new MongoClient(MongoURL);
+//     await client.connect()
+//     console.log("MongoDB is connected Sucessfully")
+//     return client
+// }
+
+
+// export const client = await createConnection();
+
+
+import { MongoClient } from "mongodb";
+
+const MongoURL = "mongodb://127.0.0.1:27017";
+
+
+export async function createConnection() {
+  const client = new MongoClient(MongoURL);
+  await client.connect();
+  console.log("MongoDB is connected successfully");
+  return client
+}
+
+
+
+carController.js
+
+import { createConnection } from "./db.js";
+
+export async function getAllCars() {
+  const db = await createConnection();
+  const cars = await db.collection("cars").find().toArray();
+  return cars;
+}
+
+export async function getCarById(id) {
+  const db = await createConnection();
+  const car = await db.collection("cars").findOne({ _id: id });
+  return car;
+}
+
+export async function addCar(carData) {
+  const db = await createConnection();
+  const result = await db.collection("cars").insertOne(carData);
+  return result.insertedId;
+}
+
+export async function updateCar(id, carData) {
+  const db = await createConnection();
+  const result = await db.collection("cars").updateOne({ _id: id }, { $set: carData });
+  return result.modifiedCount;
+}
+
+export async function deleteCar(id) {
+  const db = await createConnection();
+  const result = await db.collection("cars").deleteOne({ _id: id });
+  return result.deletedCount;
+}
+
+index.js
+
+
+// import express from "express";
+// import { createConnection } from "./db.js";
+// import { CarsRouters } from "./Controllers/Cars.js";
+
+// const PORT = 9006;
+
+// createConnection();
+
+// const app = express();
+
+// app.use(express.json());
+
+// app.use("/all", CarsRouters);
+
+// app.listen(PORT, () =>
+//   console.log(`Server running on localhost:${PORT}`)
+// );
+
+
+import express from "express";
+import { getAllCars, getCarById, addCar, updateCar, deleteCar } from "./carController.js";
+
+const app = express();
+const PORT = 9006;
+
+app.use(express.json());
+
+// Get all cars
+app.get("/cars", async (req, res) => {
+  try {
+    const cars = await getAllCars(req);
+    if (cars.length) {
+      res.status(400).json({ error: "Cars Not found" });
+      return;
+    }
+    res.status(200).json({ data: cars});
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// Get car by ID
+app.get("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const car = await getCarById(carId);
+    if (!car) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json(car);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Add a new car
+app.post("/add/cars", async (req, res) => {
+  try {
+    const carData = req.body;
+    const newCarId = await addCar(carData);
+    res.json({ id: newCarId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Update a car by ID
+app.put("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const carData = req.body;
+    const modifiedCount = await updateCar(carId, carData);
+    if (modifiedCount === 0) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json({ message: "Car updated successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Delete a car by ID
+app.delete("/cars/:id", async (req, res) => {
+  try {
+    const carId = req.params.id;
+    const deletedCount = await deleteCar(carId);
+    if (deletedCount === 0) {
+      res.status(404).json({ error: "Car not found" });
+    } else {
+      res.json({ message: "Car deleted successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on localhost:${PORT}`);
+});
+
+
+db.js
+
+
+import { MongoClient } from "mongodb";
+
+const MongoURL = "mongodb://127.0.0.1:27017";
+export async function createConnection() {
+  const client = new MongoClient(MongoURL);
+  await client.connect();
+  console.log("MongoDB is connected successfully");
+  return client
+}
+
+
+export const client=await createConnection()
+
+
+carcontrollers.js
+
+
+import { createConnection } from "./db.js";
+
+export  function getAllCars(req) {
+//   const db = await createConnection();
+//   const cars = await db.collection("cars").find().toArray();
+//   return cars;
+
+return client
+    .db("cars")
+    .collection("cars")
+    .find(req.query)
+    .toArray();
+}
+// export function getAllStudents(req){
+//     return client
+//     .db("b45")
+//     .collection("students")
+//     .find(req.query)
+//     .toArray();
+// }
+
+export async function getCarById(id) {
+  const db = await createConnection();
+  const car = await db.collection("cars").findOne({ _id: id });
+  return car;
+}
+
+export async function addCar(carData) {
+  const db = await createConnection();
+  const result = await db.collection("cars").insertOne(carData);
+  return result.insertedId;
+}
+
+export async function updateCar(id, carData) {
+  const db = await createConnection();
+  const result = await db.collection("cars").updateOne({ _id: id }, { $set: carData });
+  return result.modifiedCount;
+}
+
+export async function deleteCar(id) {
+  const db = await createConnection();
+  const result = await db.collection("cars").deleteOne({ _id: id });
+  return result.deletedCount;
+}
+
+
+
+_id: ObjectId("64a2d2b62e666226ae30a123"),
+image: 'https://stimg.cardekho.com/images/car-images/large/Ford/Ford-Mustang/3835/ford-mustang-ingot-silver_7e7e7e.jpg?impolicy=resize&imwidth=420',
+make: 'Ford',
+model: 'Mustang Mach-E',
+price: 429950,
+color: 'Silver',
+fuelType: 'Electric',
+
+
+
+
