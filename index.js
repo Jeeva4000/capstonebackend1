@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors"
 import dotenv from "dotenv"
 import { carsRouter } from "./Routers/cars.js";
 import { userRouter } from "./Routers/user.js";
@@ -14,6 +15,7 @@ const app = express();
 
 //middle ware
 app.use(express.json())
+app.use(cors())
 
 //cars routers
 app.use("/cars",isAuthenticated,carsRouter )
