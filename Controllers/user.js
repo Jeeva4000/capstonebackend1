@@ -27,11 +27,11 @@
 import { client } from "../db.js";
 import Jwt from "jsonwebtoken";
 
-export async function addUser(userInfo) {
+export  function addUser(userInfo) {
   return client.db("cars").collection("users").insertOne(userInfo);
 }
 
-export async function getUser(userEmail) {
+export  function getUser(userEmail) {
   return client.db("cars").collection("users").findOne({ email: userEmail });
 }
 
