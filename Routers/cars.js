@@ -24,7 +24,7 @@ router.get("/all", async (req,res)=>{
            res.status(400).json({data:"user not found"})
            return 
         }
-       res.status(200).json({data:cars})
+       res.status(200).json({data:car})
     } catch (error) {
         console.log(error)
         res.status(500).json({data:"internal server error"})
@@ -40,7 +40,7 @@ router.get("/:id", async(req,res) =>{
             res.status(400).json({data:"user not found"})
             return 
         }
-        res.status(200).json({data:cars})
+        res.status(200).json({data:car})
     } catch (error) {
         console.log(error)
         res.status(500).json({data:"internal server error"})
