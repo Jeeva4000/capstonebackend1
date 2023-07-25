@@ -16,10 +16,10 @@ router.get("/all", async (req,res)=>{
         // console.log("validuser--",validUser)
 
         
-        const cars = await getAllCars(req)
+        const car = await getAllCars(req)
         //  console.log(cars)
 
-        if(!cars){
+        if(!car){
          
            res.status(400).json({data:"user not found"})
            return 
@@ -35,8 +35,8 @@ router.get("/all", async (req,res)=>{
 router.get("/:id", async(req,res) =>{
     try {
         const {id} = req.params;
-        const cars = await getCarsById(id)
-        if(!cars){
+        const car = await getCarsById(id)
+        if(!car){
             res.status(400).json({data:"user not found"})
             return 
         }
@@ -49,8 +49,8 @@ router.get("/:id", async(req,res) =>{
 
 router.post("/add", async (req,res)=>{
     try {
-        const newCars = req.body;
-        if(!newCars){
+        const newCar = req.body;
+        if(!newCar){
             res.status(400).json({data:"No details provided"})
         }
         const result = await addCarsData(newCars)
