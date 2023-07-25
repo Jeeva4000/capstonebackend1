@@ -49,8 +49,8 @@ router.get("/:id", async(req,res) =>{
 
 router.post("/add", async (req,res)=>{
     try {
-        const newCar = req.body;
-        if(!newCar){
+        const newCars = req.body;
+        if(!newCars){
             res.status(400).json({data:"No details provided"})
         }
         const result = await addCarsData(newCars)
