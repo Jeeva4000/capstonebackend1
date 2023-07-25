@@ -96,4 +96,4 @@ router.delete("/delete/:id", async(req,res)=>{
 
 
 
-export const carsRouter = router
+export const carRouter = router

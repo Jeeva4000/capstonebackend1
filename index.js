@@ -18,7 +18,7 @@ app.use(express.json())
 app.use(cors())
 
 //cars routers
-app.use("/car",isAuthenticated,carsRouter )
+app.use("/car",isAuthenticated,carRouter )
 app.use("/user",userRouter)
   
 
