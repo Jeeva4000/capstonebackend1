@@ -1,5 +1,5 @@
 
-// user.js
+
 
 import { client } from "../db.js";
 import Jwt from "jsonwebtoken";
