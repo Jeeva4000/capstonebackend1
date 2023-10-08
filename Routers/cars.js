@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/all", async (req, res) => {
     try {
         // console.log(req.query)
-        const cars = await getAllCars(); // Change 'car' to 'cars'
+        const cars = await getAllCars();
         // console.log("cars",cars);
 
         if (!cars) {
@@ -86,11 +86,11 @@ export const carsRouter = router;
 
 
 
- // const token = req.headers["x-auth-token"];
-        // console.log("token---",token);
-        // if(!token){
-        //     console.log("data")
-        //     return res.status(400).json({data:"Invalid Authorization"})
-        // }
-        // const validUser = Jwt.verify(token, process.env.SECERTKEY)
-        // console.log("validuser--",validUser)
+// const token = req.headers["x-auth-token"];
+// console.log("token---",token);
+// if(!token){
+//     console.log("data")
+//     return res.status(400).json({data:"Invalid Authorization"})
+// }
+// const validUser = Jwt.verify(token, process.env.SECERTKEY)
+// console.log("validuser--",validUser)
